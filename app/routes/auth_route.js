@@ -1,11 +1,9 @@
-const controller = require("../controllers/auth_controller");
 
 module.exports = (app) => {
-    app.post(
-        "/login/auth/genkey", controller.genkey
-    );
+    const auth = require('../controllers/auth_controller');
+    const router = require('express').Router();
 
-    app.post(
-        "/login/auth/signin", controller.signin
-    );
+    router.get('/login', auth.login);
+
+    app.use('/auth', router);
 };

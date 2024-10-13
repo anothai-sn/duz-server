@@ -25,8 +25,8 @@ app.use(express.urlencoded({extended: true}))
 // Routes of api in server
 require('./app/routes/animal_route.js')(app);
 require('./app/routes/animalType_route.js')(app);
-require('./app/routes/auth_route.js')
-require('./app/routes/user_rouete.js')
+require('./app/routes/user_route.js')(app)
+require('./app/routes/auth_route.js')(app)
 
 // Check port to running
 const PORT = 5000;

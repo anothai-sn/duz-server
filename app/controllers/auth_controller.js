@@ -1,58 +1,35 @@
-const db = require("../models");
-const config = require("../config/auth_config");
+const db = require('../models');
 const User = db.user;
 
-var jwt = require("jsonwebtoken");
-var bcrypt = require("bcryptjs");
-
-exports.genkey = (req, res) => {
-    const hash = bcrypt.hashSync(req.body.password, 10);
-    res.status(200).json({ password: hash });
-};
-
-exports.signin = (req, res) => {
-    User.findOne({
-        where: {
-            username: req.body.username
-        }
-    }).then(user => {
-        if (!user) {
-            return res.status(404).json({ message: "User not found!" });
+exports.login = async (req, res) => {
+    try {
+        const username = req.body.username
+        const password = req.body.password
+        // Check if username and password are provided
+        if (!username || !password) {
+            return res.status(400).json({ message: "Username and password are required." });
         }
 
-        var passwordIsValid = bcrypt.compareSync(
-            req.body.password,
-            user.password
-        );
+       // Find the user by username
+       const user = User.findOne({ where: { username: username } });
 
-        if (!passwordIsValid) {
-            return res.status(401).json({
-                accessToken: null,
-                message: "Invalid password!"
-            });
+       // Check if the user exists
+       if (!user) {
+           return res.status(404).json({ message: "User not found." });
+       }
+
+        // Compare the provided password with the hashed password in the database
+        const pwd = User.findOne({ where: { password: password } })
+
+        // Check if the password is correct
+        if (username == user && password == pwd) {
+            return res.status(401).json({ message: "Failed" });
+        } else {
+            return res.status(200).json({ status: "Passed" });
         }
 
-        const token = jwt.sign({ id: user.id }, config.secret,
-            {
-                algorithm: 'HS256',
-                expiresIn: 86400 // 24 hours
-            }
-        );
-
-        var authorities = [];
-        user.getRoles().then(roles => {
-            for (let i = 0;i < roles.length; i++){
-                authorities.push("ROLE_" + roles[i].name.toUpperCase());
-            }
-            res.status(200).json({
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                roles: authorities,
-                accessToken: token
-            });
-        });
-    }).catch(err => {
-        res.status(500).json({ message: err.message });
-    });
-};
+    } catch (err) {
+        // Handle any errors
+        return res.status(500).json({ message: err.message || "Something went wrong during login." });
+    }
+}
