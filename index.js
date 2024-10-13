@@ -20,11 +20,13 @@ db.sequelize.sync({force: false}).then(() => {
 });
 
 app.use(express.json());
-app.use(express.urlencoded({extended: false}))
+app.use(express.urlencoded({extended: true}))
 
 // Routes of api in server
 require('./app/routes/animal_route.js')(app);
 require('./app/routes/animalType_route.js')(app);
+require('./app/routes/auth_route.js')
+require('./app/routes/user_rouete.js')
 
 // Check port to running
 const PORT = 5000;

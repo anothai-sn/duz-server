@@ -24,18 +24,21 @@ db.sequelize = sequelize;
 
 db.animal = require('../models/animal_model.js')(sequelize, Sequelize);
 db.animalType = require('../models/animalType_model.js')(sequelize, Sequelize);
-db.description = require('../models/description_model.js')(sequelize, Sequelize);
+db.user = require("./user_model")(sequelize, Sequelize);
+db.role = require("./role_model")(sequelize, Sequelize);
+
+// 
+db.role.belongsToMany(db.user, {
+    through: "user_roles"
+});
+db.user.belongsToMany(db.role, {
+    through: "user_roles"
+});
 
 // one to many : animal type
 db.animalType.hasMany(db.animal, {
     onDelete: 'CASCADE'
 });
 db.animal.belongsTo(db.animalType);
-
-// one to many : Description
-db.animal.hasMany(db.description, {
-    onDelete: 'CASCADE'
-});
-db.description.belongsTo(db.animal);
 
 module.exports = db;

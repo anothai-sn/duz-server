@@ -32,7 +32,7 @@ exports.findOne = (req, res) => {
 
 exports.create = (req, res) => {
     try {
-
+        console.log(req.body.type)
         if(!req.body.type) {
             return res.status(400).json({Message: "Data can't empty!"});
         }
