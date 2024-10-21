@@ -4,10 +4,10 @@ module.exports = (app) => {
     const router = require('express').Router();
 
     router.get('/', user.findAll);
-    router.get('/:id', user.findOne);
+    router.get('/:username', user.findOne);
     router.post('/create', user.create);
-    router.put('/update/:id', user.update);
-    router.delete('/delete/:id', user.delete);
+    router.put('/update/:username', user.update);
+    router.delete('/delete/:username', user.delete);
 
     router.post('/createRole', user.createRole);
 

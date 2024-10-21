@@ -21,23 +21,29 @@ exports.findAll = (req, res) => {
 
 exports.findOne = (req, res) => {
     try {
-
-        User.findByPk(req.params.id, {
-            attributes: ["id", "username", "password"],
-            include: [{
-                model: Role,
-                attributes: ["role"]
-            }]
-        })
-        .then((data) => {
-            res.status(200).json(data);
-        }).catch((err) => {
-            res.status(400).json({message: err.meassage || `Something wrong, Can't find animal type user:${req.params.username} data..`});
-        });
-    } catch(err) {
-        res.status(400).json({message: err.meassage});
-    };
-};
+      User.findOne({
+        where: { username: req.params.username },  // Search based on the username
+        attributes: ["id", "username", "password"],  // Select specific attributes from the User model
+        include: [{
+          model: Role,  // Include the related Role model
+          attributes: ["role"]  // Select the 'role' attribute from the Role model
+        }]
+      })
+      .then((data) => {
+        if (data) {
+          res.status(200).json(data);  // Return the found data with a 200 status
+        } else {
+          res.status(404).json({ message: `User with username: ${req.params.username} not found.` });
+        }
+      })
+      .catch((err) => {
+        res.status(400).json({ message: err.message || `Something went wrong while fetching user: ${req.params.username}.` });
+      });
+    } catch (err) {
+      res.status(500).json({ message: err.message || 'Internal Server Error.' });  // Handle any unexpected errors
+    }
+  };
+  
 
 exports.create = async (req, res) => {
     try {
@@ -47,7 +53,8 @@ exports.create = async (req, res) => {
 
         const generateCredentials = () => {
             const randomDigits = Math.floor(10000 + Math.random() * 9000); // generates a 4-digit random number
-            const genUsername = `@${req.body.username}${randomDigits}`;
+            const randomDigitsUser = Math.floor(1000 + Math.random() * 9000); // generates a 4-digit random number
+            const genUsername = `@${req.body.username}${randomDigitsUser}`;
             const genPassword = `duz${randomDigits}`;
             return { genUsername, genPassword };
         };
@@ -119,7 +126,7 @@ exports.update = async (req, res) => {
                 roleId: req.body.roleId
             },
             {
-                where: { id: req.params.id }
+                where: { username: req.params.username }
             }
         );
 
@@ -133,7 +140,7 @@ exports.update = async (req, res) => {
 exports.delete = (req, res) => {
     try {
         User.destroy({
-            where: { id:req.params.id }
+            where: { username:req.params.username }
         }).then(data => {
             if(data == 1) {
                 res.status(200).json({message: "User deleted"});

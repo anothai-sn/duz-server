@@ -109,7 +109,7 @@ exports.create = (req, res) => {
 };
 
 exports.update = (req, res) => {
-    upload.single('image')(req, res, function (err) {
+    upload.single('image')(req, res, async function (err) {
         if (err instanceof multer.MulterError) {
             return res.status(400).json({ message: err.message });
         } else if (err) {
@@ -121,6 +121,14 @@ exports.update = (req, res) => {
                 return res.status(400).json({ message: "Data can't be empty!" });
             }
 
+            const animal = await Animal.findByPk(req.params.id);
+            if (!animal) {
+                return res.status(404).json({ message: "Animal not found" });
+            }
+
+            const fileName = animal.imageName; // Get the imageName of the animal
+            const filePath = path.join(__dirname, '../../uploads', fileName); // Construct the file path
+
             const animalObj = {
                 animalName: req.body.animalName,
                 behavior: req.body.behavior,
@@ -128,19 +136,33 @@ exports.update = (req, res) => {
                 reproduction: req.body.reproduction,
                 diet: req.body.diet,
                 conservation: req.body.conservation,
-                image: req.file ? req.file.filename : req.body.image, // ใช้ filename ของไฟล์ที่อัปโหลดหรือค่าที่มีอยู่
+                image: req.file ? req.file.filename : req.body.image, // Use uploaded file name or existing value
                 animalTypeId: req.body.animalTypeId
             };
 
-            Animal.update(animalObj, {
+            const updated = await Animal.update(animalObj, {
                 where: { id: req.params.id }
-            }).then((data) => {
-                res.status(200).json({ message: "Animal updated successfully" });
-            }).catch(err => {
-                res.status(500).json({ message: err.message || `Something went wrong, can't update animal id: ${req.params.id}` });
             });
+
+            if (updated[0] === 0) {
+                return res.status(404).json({ message: "Animal not found" });
+            }
+
+            // Step 3: Check if the file exists and delete it
+            if (fileName) {
+                fs.unlink(filePath, (err) => {
+                    if (err) {
+                        console.error(`Error deleting file: ${err.message}`);
+                    } else {
+                        console.log('File deleted successfully!');
+                    }
+                });
+            }
+
+            res.status(200).json({ message: "Animal updated successfully" });
+
         } catch (err) {
-            res.status(400).json({ message: err.message || "Bad Request" });
+            res.status(500).json({ message: err.message || "Something went wrong, can't update animal id: " + req.params.id });
         }
     });
 };
